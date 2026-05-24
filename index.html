@@ -290,17 +290,36 @@ function showApp(){
 // ================= resetCounter =================  
 function resetCounter(){
 
+  // reset biến
   totalScan = 0;
 
+  // reset localStorage
   localStorage.setItem(
     "totalScan",
-    0
+    "0"
   );
 
+  // cập nhật UI
   updateCounter();
 
-  result.innerHTML =
-    "🔄 Đã reset counter";
+  // thông báo
+  showOverlay(
+    `
+    🔄 ĐÃ RESET COUNTER
+
+    <br><br>
+
+    📦 Counter: 0
+    `,
+    true
+  );
+
+  // tự đóng overlay sau 1.5s
+  setTimeout(()=>{
+
+    hideOverlay();
+
+  },1500);
 }
 // ================= LOGOUT =================
 function logout(){
