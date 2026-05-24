@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+body{
+  font-family:Arial;
+  background:#111;
+  color:white;
+  text-align:center;
+  margin:0;
+  padding:15px;
+}
+
+#reader{
+  width:100%;
+}
+
+#result{
+  font-size:24px;
+  padding:15px;
+}
+
+button{
+  padding:10px 14px;
+  margin:6px;
+  font-size:15px;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📦 KIỂM ĐẾM KHO</h2>
+
+<button onclick="switchCamera()">🔄 Camera</button>
+<button onclick="toggleFlash()">🔦 Flash</button>
+
+<div id="reader"></div>
+
+<div id="result">
+Sẵn sàng quét
+</div>
+
+<script>
+
+const result = document.getElementById("result");
+
+let qr = new Html5Qrcode("reader");
+
+let cameras = [];
+let cameraIndex = 0;
+
+let scanning = true;
+
+let flashOn = false;
+
+// ================== START CAMERA ==================
+async function startCamera(id){
+
+  try{
+
+    if(qr.isScanning){
+      await qr.stop();
+      await qr.clear();
+    }
+
+    await qr.start(
+      id,
+      {
+        fps: 12,
+        qrbox: 260
+      },
+      onScan
+    );
+
+  }catch(e){
+
+    console.log(e);
+
+    result.innerHTML = "❌ Camera lỗi";
+  }
+}
+
+// ================== SCAN ==================
+function onScan(text){
+
+  if(!scanning) return;
+
+  scanning = false;
+
+  result.innerHTML = "⏳ Đang xử lý...";
+
+  sendData(text);
+}
+
+// ================== SEND ==================
+function sendData(text){
+
+  fetch("https://script.google.com/macros/s/AKfycbxkvNbCzJR0EaDCxkn-xDGcCxOkQiU8Rjq06HBLkwp5PWeiEK3FUA0X9a5xJmOQ_2StsA/exec?mtn=" + encodeURIComponent(text)) // thay link web app mới deploy ở đây
+
+  .then(r => r.json())
+
+  .then(res => {
+
+    if(res.success){
+
+      result.innerHTML =
+      `✅ Thành công<br>
+      Barcode: ${res.barcode}<br>
+      SL: ${res.qty}`;
+
+    }else{
+
+      result.innerHTML =
+      `❌ ${res.message}`;
+    }
+
+    resetScan();
+
+  })
+
+  .catch(err => {
+
+    console.log(err);
+
+    result.innerHTML = "❌ Lỗi mạng";
+
+    resetScan();
+  });
+}
+
+// ================== RESET ==================
+function resetScan(){
+
+  setTimeout(() => {
+
+    scanning = true;
+
+    result.innerHTML = "📷 Sẵn sàng quét";
+
+  }, 700);
+}
+
+// ================== INIT CAMERA ==================
+Html5Qrcode.getCameras().then(devs => {
+
+  cameras = devs;
+
+  let back = devs.find(d =>
+    /back|rear|environment/i.test(d.label)
+  );
+
+  cameraIndex = back
+    ? devs.indexOf(back)
+    : devs.length - 1;
+
+  startCamera(cameras[cameraIndex].id);
+});
+
+// ================== SWITCH CAMERA ==================
+function switchCamera(){
+
+  if(cameras.length < 2){
+
+    alert("Chỉ có 1 camera");
+
+    return;
+  }
+
+  cameraIndex = (cameraIndex + 1) % cameras.length;
+
+  startCamera(cameras[cameraIndex].id);
+}
+
+// ================== FLASH ==================
+async function toggleFlash(){
+
+  try{
+
+    const track = qr.getRunningTrack?.();
+
+    if(!track){
+
+      alert("Chưa mở camera");
+
+      return;
+    }
+
+    flashOn = !flashOn;
+
+    await track.applyConstraints({
+      advanced: [{ torch: flashOn }]
+    });
+
+    result.innerHTML =
+      flashOn
+      ? "🔦 Flash ON"
+      : "🔦 Flash OFF";
+
+  }catch(e){
+
+    alert("Thiết bị không hỗ trợ flash");
+  }
+}
+
+</script>
+
+</body>
+</html>
