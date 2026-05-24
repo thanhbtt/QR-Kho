@@ -445,7 +445,7 @@ function onScan(text){
 
   // chống quét trùng
   if(isDuplicate(text)) return;
-
+  // khóa scan tạm thời
   scanning = false;
 
   result.innerHTML = "⏳ Đang xử lý...";
@@ -525,14 +525,17 @@ function resetScan(){
 
   setTimeout(()=>{
 
+    // ẩn overlay
     hideOverlay();
 
+    // mở scan lại
     scanning = true;
 
+    // reset text
     result.innerHTML =
       "📷 Sẵn sàng quét";
 
-  },1000);
+  },3000);
 }
 
 // ================= SWITCH CAMERA =================
@@ -618,6 +621,9 @@ function hideOverlay(){
   overlayContent.innerHTML = "";
 
   overlayShowing = false;
+
+  // QUAN TRỌNG
+  scanning = true;
 }
 // ================= SUCCESS =================
 function successEffect(){
