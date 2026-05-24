@@ -143,7 +143,9 @@ button{
 <button onclick="toggleFlash()">🔦 Flash</button>
 
 <button onclick="logout()">🚪 Logout</button>
-
+<button onclick="resetCounter()">
+🧹 Reset Counter
+</button>
 <div id="reader">
 
   <div class="scanline"></div>
@@ -163,7 +165,17 @@ let currentUser = localStorage.getItem("user");
 const loginBox = document.getElementById("loginBox");
 const app = document.getElementById("app");
 const result = document.getElementById("result");
+const successAudio = new Audio(
+  "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+);
 
+const errorAudio = new Audio(
+  "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+);
+
+// preload
+successAudio.load();
+errorAudio.load();
 let qr = new Html5Qrcode("reader");
 
 let cameras = [];
@@ -238,7 +250,21 @@ function showApp(){
   initCamera();
   updateCounter();
 }
+// ================= resetCounter =================  
+function resetCounter(){
 
+  totalScan = 0;
+
+  localStorage.setItem(
+    "totalScan",
+    0
+  );
+
+  updateCounter();
+
+  result.innerHTML =
+    "🔄 Đã reset counter";
+}
 // ================= LOGOUT =================
 function logout(){
 
@@ -410,7 +436,7 @@ function resetScan(){
 
     result.innerHTML = "📷 Sẵn sàng quét";
 
-  },250);
+  },3000);
 }
 
 // ================= SWITCH CAMERA =================
@@ -434,11 +460,22 @@ async function toggleFlash(){
 
   try{
 
-    const track = qr.getRunningTrack?.();
+    const track =
+      qr.getRunningTrack();
 
     if(!track){
 
-      alert("Chưa mở camera");
+      alert("Camera chưa sẵn sàng");
+
+      return;
+    }
+
+    const capabilities =
+      track.getCapabilities();
+
+    if(!capabilities.torch){
+
+      alert("Thiết bị không hỗ trợ flash");
 
       return;
     }
@@ -446,16 +483,25 @@ async function toggleFlash(){
     flashOn = !flashOn;
 
     await track.applyConstraints({
-      advanced:[{ torch:flashOn }]
+      advanced: [
+        { torch: flashOn }
+      ]
     });
 
-  }catch(e){
+    result.innerHTML =
+      flashOn
+      ? "🔦 Flash ON"
+      : "🔦 Flash OFF";
 
-    alert("Không hỗ trợ flash");
+  }catch(err){
+
+    console.log(err);
+
+    alert("Flash không hỗ trợ");
   }
 }
 
-// ================= BEEP =================
+
 // ================= SUCCESS =================
 function successEffect(){
 
@@ -470,46 +516,40 @@ function successEffect(){
 
   // rung
   if(navigator.vibrate){
-
-    navigator.vibrate(120);
+    navigator.vibrate([120,50,120]);
   }
 
   // âm thanh
-  new Audio(
-    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
-  ).play();
+  successAudio.currentTime = 0;
+
+  successAudio.play().catch(()=>{});
 
   // flash xanh
-  document.body.style.background =
-    "#063";
+  document.body.style.background = "#063";
 
   setTimeout(()=>{
 
-    document.body.style.background =
-      "#111";
+    document.body.style.background = "#111";
 
-  },120);
+  },150);
 }
 
 // ================= ERROR =================
 function errorEffect(){
 
   if(navigator.vibrate){
-
     navigator.vibrate([100,80,100]);
   }
 
-  new Audio(
-    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-  ).play();
+  errorAudio.currentTime = 0;
 
-  document.body.style.background =
-    "#500";
+  errorAudio.play().catch(()=>{});
+
+  document.body.style.background = "#500";
 
   setTimeout(()=>{
 
-    document.body.style.background =
-      "#111";
+    document.body.style.background = "#111";
 
   },200);
 }
