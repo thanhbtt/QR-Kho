@@ -1,53 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <style>
+
 body{
   font-family:Arial;
   background:#111;
   color:white;
   text-align:center;
-  margin:0;
-  padding:15px;
+  padding:10px;
+}
+
+input{
+  width:90%;
+  padding:12px;
+  margin:6px;
+  border-radius:8px;
+  border:none;
+}
+
+button{
+  padding:12px 18px;
+  border:none;
+  border-radius:8px;
+  margin:5px;
+  font-size:16px;
 }
 
 #reader{
   width:100%;
 }
 
+#app{
+  display:none;
+}
+
 #result{
-  font-size:24px;
+  font-size:22px;
   padding:15px;
 }
 
-button{
-  padding:10px 14px;
-  margin:6px;
-  font-size:15px;
-  border-radius:8px;
-}
 </style>
+
 </head>
 
 <body>
 
+<!-- LOGIN -->
+
+<div id="loginBox">
+
+<h2>🔐 Đăng nhập</h2>
+
+<input id="username" placeholder="Mã nhân viên">
+
+<input id="password" type="password" placeholder="Mật khẩu">
+
+<br>
+
+<button onclick="login()">Đăng nhập</button>
+
+<div id="loginMsg"></div>
+
+</div>
+
+<!-- APP -->
+
+<div id="app">
+
 <h2>📦 KIỂM ĐẾM KHO</h2>
 
+<div id="userInfo"></div>
+
 <button onclick="switchCamera()">🔄 Camera</button>
+
 <button onclick="toggleFlash()">🔦 Flash</button>
+
+<button onclick="logout()">🚪 Logout</button>
 
 <div id="reader"></div>
 
-<div id="result">
-Sẵn sàng quét
+<div id="result">Sẵn sàng quét</div>
+
 </div>
 
 <script>
 
+const API = "https://script.google.com/macros/s/AKfycbxkvNbCzJR0EaDCxkn-xDGcCxOkQiU8Rjq06HBLkwp5PWeiEK3FUA0X9a5xJmOQ_2StsA/exec";
+
+let currentUser = localStorage.getItem("user");
+
+const loginBox = document.getElementById("loginBox");
+const app = document.getElementById("app");
 const result = document.getElementById("result");
 
 let qr = new Html5Qrcode("reader");
@@ -59,21 +108,105 @@ let scanning = true;
 
 let flashOn = false;
 
-// ================== START CAMERA ==================
+// ================= AUTO LOGIN =================
+if(currentUser){
+
+  showApp();
+}
+
+// ================= LOGIN =================
+function login(){
+
+  const username =
+    document.getElementById("username").value;
+
+  const password =
+    document.getElementById("password").value;
+
+  fetch(
+    API
+    + "?action=login"
+    + "&username=" + encodeURIComponent(username)
+    + "&password=" + encodeURIComponent(password)
+  )
+
+  .then(r=>r.json())
+
+  .then(res=>{
+
+    if(res.success){
+
+      localStorage.setItem("user", res.username);
+
+      currentUser = res.username;
+
+      showApp();
+
+    }else{
+
+      document.getElementById("loginMsg")
+      .innerHTML = "❌ Sai tài khoản";
+    }
+  });
+}
+
+// ================= SHOW APP =================
+function showApp(){
+
+  loginBox.style.display = "none";
+
+  app.style.display = "block";
+
+  document.getElementById("userInfo")
+  .innerHTML = "👤 " + currentUser;
+
+  initCamera();
+}
+
+// ================= LOGOUT =================
+function logout(){
+
+  localStorage.removeItem("user");
+
+  location.reload();
+}
+
+// ================= INIT CAMERA =================
+function initCamera(){
+
+  Html5Qrcode.getCameras().then(devs => {
+
+    cameras = devs;
+
+    let back = devs.find(d =>
+      /back|rear|environment/i.test(d.label)
+    );
+
+    cameraIndex = back
+      ? devs.indexOf(back)
+      : devs.length - 1;
+
+    startCamera(cameras[cameraIndex].id);
+  });
+}
+
+// ================= START CAMERA =================
 async function startCamera(id){
 
   try{
 
     if(qr.isScanning){
+
       await qr.stop();
+
       await qr.clear();
     }
 
     await qr.start(
       id,
       {
-        fps: 12,
-        qrbox: 260
+        fps:12,
+        qrbox:260
       },
       onScan
     );
@@ -86,7 +219,7 @@ async function startCamera(id){
   }
 }
 
-// ================== SCAN ==================
+// ================= SCAN =================
 function onScan(text){
 
   if(!scanning) return;
@@ -95,74 +228,53 @@ function onScan(text){
 
   result.innerHTML = "⏳ Đang xử lý...";
 
-  sendData(text);
-}
+  fetch(
+    API
+    + "?mtn=" + encodeURIComponent(text)
+    + "&user=" + encodeURIComponent(currentUser)
+  )
 
-// ================== SEND ==================
-function sendData(text){
+  .then(r=>r.json())
 
-  fetch("https://script.google.com/macros/s/AKfycbxkvNbCzJR0EaDCxkn-xDGcCxOkQiU8Rjq06HBLkwp5PWeiEK3FUA0X9a5xJmOQ_2StsA/exec?mtn=" + encodeURIComponent(text)) // thay link web app mới deploy ở đây
-
-  .then(r => r.json())
-
-  .then(res => {
+  .then(res=>{
 
     if(res.success){
 
       result.innerHTML =
-      `✅ Thành công<br>
-      Barcode: ${res.barcode}<br>
-      SL: ${res.qty}`;
+      `
+      ✅ Thành công<br><br>
+      📦 ${res.product}<br>
+      🔢 ${res.barcode}<br>
+      📊 SL: ${res.qty}
+      `;
+
+      beep();
+
+      vibrate();
 
     }else{
 
       result.innerHTML =
-      `❌ ${res.message}`;
+      "❌ " + res.message;
     }
-
-    resetScan();
-
-  })
-
-  .catch(err => {
-
-    console.log(err);
-
-    result.innerHTML = "❌ Lỗi mạng";
 
     resetScan();
   });
 }
 
-// ================== RESET ==================
+// ================= RESET =================
 function resetScan(){
 
-  setTimeout(() => {
+  setTimeout(()=>{
 
     scanning = true;
 
     result.innerHTML = "📷 Sẵn sàng quét";
 
-  }, 700);
+  },700);
 }
 
-// ================== INIT CAMERA ==================
-Html5Qrcode.getCameras().then(devs => {
-
-  cameras = devs;
-
-  let back = devs.find(d =>
-    /back|rear|environment/i.test(d.label)
-  );
-
-  cameraIndex = back
-    ? devs.indexOf(back)
-    : devs.length - 1;
-
-  startCamera(cameras[cameraIndex].id);
-});
-
-// ================== SWITCH CAMERA ==================
+// ================= SWITCH CAMERA =================
 function switchCamera(){
 
   if(cameras.length < 2){
@@ -172,12 +284,13 @@ function switchCamera(){
     return;
   }
 
-  cameraIndex = (cameraIndex + 1) % cameras.length;
+  cameraIndex =
+    (cameraIndex + 1) % cameras.length;
 
   startCamera(cameras[cameraIndex].id);
 }
 
-// ================== FLASH ==================
+// ================= FLASH =================
 async function toggleFlash(){
 
   try{
@@ -194,17 +307,29 @@ async function toggleFlash(){
     flashOn = !flashOn;
 
     await track.applyConstraints({
-      advanced: [{ torch: flashOn }]
+      advanced:[{ torch:flashOn }]
     });
-
-    result.innerHTML =
-      flashOn
-      ? "🔦 Flash ON"
-      : "🔦 Flash OFF";
 
   }catch(e){
 
-    alert("Thiết bị không hỗ trợ flash");
+    alert("Không hỗ trợ flash");
+  }
+}
+
+// ================= BEEP =================
+function beep(){
+
+  new Audio(
+    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+  ).play();
+}
+
+// ================= VIBRATE =================
+function vibrate(){
+
+  if(navigator.vibrate){
+
+    navigator.vibrate(120);
   }
 }
 
