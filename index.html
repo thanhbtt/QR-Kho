@@ -290,24 +290,45 @@ function showApp(){
 // ================= resetCounter =================  
 function resetCounter(){
 
+  // reset số đếm
   totalScan = 0;
 
+  // reset duplicate
   lastCode = "";
 
+  // reset local storage
   localStorage.setItem(
     "totalScan",
     "0"
   );
 
+  // update UI
   updateCounter();
 
+  // TẮT overlay hiện tại luôn
+  hideOverlay();
+
+  // reset text
+  result.innerHTML =
+    "📷 Sẵn sàng quét";
+
+  // mở scan lại
+  scanning = true;
+
+  // hiệu ứng rung + beep reset
+  if(navigator.vibrate){
+
+    navigator.vibrate(80);
+  }
+
+  successAudio.currentTime = 0;
+
+  successAudio.play().catch(()=>{});
+
+  // thông báo ngắn
   showOverlay(
     `
     🔄 ĐÃ RESET COUNTER
-
-    <br><br>
-
-    📦 Counter: 0
     `,
     true
   );
@@ -316,7 +337,7 @@ function resetCounter(){
 
     hideOverlay();
 
-  },1500);
+  },800);
 }
 // ================= LOGOUT =================
 function logout(){
@@ -419,7 +440,7 @@ function isDuplicate(code){
 }
 // ================= SCAN =================
 function onScan(text){
-  if(overlayShowing) return;
+ 
   if(!scanning) return;
 
   // chống quét trùng
@@ -577,7 +598,9 @@ async function toggleFlash(){
 }
 
 function showOverlay(html, ok=true){
+
   overlayShowing = true;
+
   overlay.style.display = "flex";
 
   overlay.className =
@@ -585,12 +608,16 @@ function showOverlay(html, ok=true){
     ? "overlay-success"
     : "overlay-error";
 
-  overlay.innerHTML = html;
+  overlayContent.innerHTML = html;
 }
 
 function hideOverlay(){
-  overlayShowing = false;
+
   overlay.style.display = "none";
+
+  overlayContent.innerHTML = "";
+
+  overlayShowing = false;
 }
 // ================= SUCCESS =================
 function successEffect(){
@@ -606,20 +633,28 @@ function successEffect(){
 
   // rung
   if(navigator.vibrate){
+
     navigator.vibrate([120,50,120]);
   }
 
-  // âm thanh
+  // beep
+  successAudio.pause();
+
   successAudio.currentTime = 0;
 
-  successAudio.play().catch(()=>{});
+  successAudio.play().catch(err=>{
+
+    console.log(err);
+  });
 
   // flash xanh
-  document.body.style.background = "#063";
+  document.body.style.background =
+    "#063";
 
   setTimeout(()=>{
 
-    document.body.style.background = "#111";
+    document.body.style.background =
+      "#111";
 
   },150);
 }
@@ -628,18 +663,26 @@ function successEffect(){
 function errorEffect(){
 
   if(navigator.vibrate){
+
     navigator.vibrate([100,80,100]);
   }
 
+  errorAudio.pause();
+
   errorAudio.currentTime = 0;
 
-  errorAudio.play().catch(()=>{});
+  errorAudio.play().catch(err=>{
 
-  document.body.style.background = "#500";
+    console.log(err);
+  });
+
+  document.body.style.background =
+    "#500";
 
   setTimeout(()=>{
 
-    document.body.style.background = "#111";
+    document.body.style.background =
+      "#111";
 
   },200);
 }
