@@ -14,26 +14,38 @@ body{
   color:white;
   text-align:center;
   padding:10px;
+  margin:0;
+  transition:0.2s;
+}
+
+h2{
+  margin-top:5px;
 }
 
 input{
   width:90%;
-  padding:12px;
+  padding:14px;
   margin:6px;
-  border-radius:8px;
+  border-radius:10px;
   border:none;
+  font-size:16px;
 }
 
 button{
   padding:12px 18px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   margin:5px;
   font-size:16px;
+  background:#0a84ff;
+  color:white;
 }
 
 #reader{
   width:100%;
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
 }
 
 #app{
@@ -42,7 +54,50 @@ button{
 
 #result{
   font-size:22px;
-  padding:15px;
+  padding:18px;
+  font-weight:bold;
+  min-height:90px;
+}
+
+.ok{
+  color:#00ff99;
+}
+
+.err{
+  color:#ff5c5c;
+}
+
+.info{
+  font-size:15px;
+  opacity:0.8;
+  margin-bottom:10px;
+}
+
+.scanline{
+  position:absolute;
+  width:100%;
+  height:3px;
+  background:#00ff99;
+  animation:scan 2s linear infinite;
+  z-index:999;
+}
+
+@keyframes scan{
+
+  0%{
+    top:0;
+  }
+
+  100%{
+    top:100%;
+  }
+}
+
+.card{
+  background:#1b1b1b;
+  padding:14px;
+  border-radius:14px;
+  margin-top:10px;
 }
 
 </style>
@@ -76,14 +131,24 @@ button{
 <h2>📦 KIỂM ĐẾM KHO</h2>
 
 <div id="userInfo"></div>
+<div class="card">
 
+  <div id="todayCount">
+    📦 Hôm nay: 0
+  </div>
+
+</div>
 <button onclick="switchCamera()">🔄 Camera</button>
 
 <button onclick="toggleFlash()">🔦 Flash</button>
 
 <button onclick="logout()">🚪 Logout</button>
 
-<div id="reader"></div>
+<div id="reader">
+
+  <div class="scanline"></div>
+
+</div>
 
 <div id="result">Sẵn sàng quét</div>
 
@@ -107,6 +172,8 @@ let cameraIndex = 0;
 let scanning = true;
 
 let flashOn = false;
+  let totalScan =
+  Number(localStorage.getItem("totalScan") || 0);
 // chống quét trùng
 let lastCode = "";
 let lastScan = 0;
@@ -116,7 +183,12 @@ if(currentUser){
 
   showApp();
 }
+function updateCounter(){
 
+  document.getElementById("todayCount")
+  .innerHTML =
+  "📦 Hôm nay: " + totalScan;
+}
 // ================= LOGIN =================
 function login(){
 
@@ -164,6 +236,7 @@ function showApp(){
   .innerHTML = "👤 " + currentUser;
 
   initCamera();
+  updateCounter();
 }
 
 // ================= LOGOUT =================
@@ -288,23 +361,42 @@ function onScan(text){
   .then(res=>{
 
     if(res.success){
-
+       successEffect();
       result.innerHTML =
-      `
-      ✅ Thành công<br><br>
-      📦 ${res.product}<br>
-      🔢 ${res.barcode}<br>
-      📊 SL: ${res.qty}
-      `;
+        `
+        <div class="ok">
+        
+        ✅ Thành công
+        
+        <br><br>
+        
+        📦 ${res.product}
+        
+        <br>
+        
+        🔢 ${res.barcode}
+        
+        <br>
+        
+        📊 SL: ${res.qty}
+        
+        </div>
+        `;
 
       beep();
 
       vibrate();
 
     }else{
-
+      errorEffect();
       result.innerHTML =
-      "❌ " + res.message;
+      `
+      <div class="err">
+      
+      ❌ ${res.message}
+      
+      </div>
+      `;
     }
 
     resetScan();
@@ -366,22 +458,101 @@ async function toggleFlash(){
 }
 
 // ================= BEEP =================
-function beep(){
+// ================= SUCCESS =================
+function successEffect(){
 
-  new Audio(
-    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
-  ).play();
-}
+  totalScan++;
 
-// ================= VIBRATE =================
-function vibrate(){
+  localStorage.setItem(
+    "totalScan",
+    totalScan
+  );
 
+  updateCounter();
+
+  // rung
   if(navigator.vibrate){
 
     navigator.vibrate(120);
   }
+
+  // âm thanh
+  new Audio(
+    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+  ).play();
+
+  // flash xanh
+  document.body.style.background =
+    "#063";
+
+  setTimeout(()=>{
+
+    document.body.style.background =
+      "#111";
+
+  },120);
 }
 
+// ================= ERROR =================
+function errorEffect(){
+
+  if(navigator.vibrate){
+
+    navigator.vibrate([100,80,100]);
+  }
+
+  new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  ).play();
+
+  document.body.style.background =
+    "#500";
+
+  setTimeout(()=>{
+
+    document.body.style.background =
+      "#111";
+
+  },200);
+}
+  // ================= SUCCESS EFFECT =================
+function successEffect(){
+
+  // rung
+  if(navigator.vibrate){
+    navigator.vibrate(120);
+  }
+
+  // beep
+  new Audio(
+    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+  ).play();
+
+  // flash xanh
+  document.body.style.background = "#0f3";
+
+  setTimeout(()=>{
+    document.body.style.background = "#111";
+  },150);
+}
+
+// ================= ERROR EFFECT =================
+function errorEffect(){
+
+  if(navigator.vibrate){
+    navigator.vibrate([100,80,100]);
+  }
+
+  new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  ).play();
+
+  document.body.style.background = "#a00";
+
+  setTimeout(()=>{
+    document.body.style.background = "#111";
+  },200);
+}
 </script>
 
 </body>
