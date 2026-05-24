@@ -369,7 +369,6 @@ function onScan(text){
 
   if(!scanning) return;
 
-  // chống quét trùng
   if(isDuplicate(text)) return;
 
   scanning = false;
@@ -387,56 +386,65 @@ function onScan(text){
   .then(res=>{
 
     if(res.success){
-       successEffect();
-      result.innerHTML =
-        `
-        <div class="ok">
-        
-        ✅ Thành công
-        
-        <br><br>
-        
-        📦 ${res.product}
-        
-        <br>
-        
-        🔢 ${res.barcode}
-        
-        <br>
-        
-        📊 SL: ${res.qty}
-        
-        </div>
-        `;
 
-     
+      successEffect();
+
+      result.innerHTML =
+      `
+      <div class="ok">
+
+      ✅ Thành công
+
+      <br><br>
+
+      📦 ${res.product}
+
+      <br>
+
+      🔢 ${res.barcode}
+
+      <br>
+
+      📊 SL: ${res.qty}
+
+      </div>
+      `;
 
     }else{
+
       errorEffect();
+
       result.innerHTML =
       `
       <div class="err">
-      
+
       ❌ ${res.message}
-      
+
       </div>
       `;
     }
 
-    resetScan();
-  });
-}
+    // scan lại sau 3 giây
+    setTimeout(()=>{
 
-// ================= RESET =================
-function resetScan(){
+      scanning = true;
 
-  setTimeout(()=>{
+      result.innerHTML =
+        "📷 Sẵn sàng quét";
+
+    },3000);
+
+  })
+
+  .catch(err=>{
+
+    console.log(err);
+
+    result.innerHTML =
+      "❌ Lỗi kết nối";
 
     scanning = true;
-
-    result.innerHTML = "📷 Sẵn sàng quét";
-
-  },5000);
+  });
 }
 
 // ================= SWITCH CAMERA =================
