@@ -226,7 +226,7 @@ let flashOn = false;
 // chống quét trùng
 let lastCode = "";
 let lastScan = 0;
-
+let overlayShowing = false;
 // ================= AUTO LOGIN =================
 if(currentUser){
 
@@ -290,19 +290,17 @@ function showApp(){
 // ================= resetCounter =================  
 function resetCounter(){
 
-  // reset biến
   totalScan = 0;
 
-  // reset localStorage
+  lastCode = "";
+
   localStorage.setItem(
     "totalScan",
     "0"
   );
 
-  // cập nhật UI
   updateCounter();
 
-  // thông báo
   showOverlay(
     `
     🔄 ĐÃ RESET COUNTER
@@ -314,7 +312,6 @@ function resetCounter(){
     true
   );
 
-  // tự đóng overlay sau 1.5s
   setTimeout(()=>{
 
     hideOverlay();
@@ -422,7 +419,7 @@ function isDuplicate(code){
 }
 // ================= SCAN =================
 function onScan(text){
-
+  if(overlayShowing) return;
   if(!scanning) return;
 
   // chống quét trùng
@@ -580,7 +577,7 @@ async function toggleFlash(){
 }
 
 function showOverlay(html, ok=true){
-
+  overlayShowing = true;
   overlay.style.display = "flex";
 
   overlay.className =
@@ -592,7 +589,7 @@ function showOverlay(html, ok=true){
 }
 
 function hideOverlay(){
-
+  overlayShowing = false;
   overlay.style.display = "none";
 }
 // ================= SUCCESS =================
