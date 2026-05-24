@@ -190,18 +190,10 @@ button{
 <div id="result">Sẵn sàng quét</div>
 <div id="scanOverlay"></div>
 </div>
-
 <script>
 
 const API = "https://script.google.com/macros/s/AKfycbxkvNbCzJR0EaDCxkn-xDGcCxOkQiU8Rjq06HBLkwp5PWeiEK3FUA0X9a5xJmOQ_2StsA/exec";
 
-let currentUser = localStorage.getItem("user");
-
-const loginBox = document.getElementById("loginBox");
-const app = document.getElementById("app");
-const result = document.getElementById("result");
-  const overlay =
-  document.getElementById("scanOverlay");
 const successAudio = new Audio(
   "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
 );
@@ -210,34 +202,62 @@ const errorAudio = new Audio(
   "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
 );
 
-// preload
 successAudio.load();
 errorAudio.load();
-let qr = new Html5Qrcode("reader");
+
+let currentUser =
+  localStorage.getItem("user");
+
+const loginBox =
+  document.getElementById("loginBox");
+
+const app =
+  document.getElementById("app");
+
+const result =
+  document.getElementById("result");
+
+const overlay =
+  document.getElementById("scanOverlay");
+
+const overlayContent =
+  document.getElementById("overlayContent");
+
+let qr =
+  new Html5Qrcode("reader");
 
 let cameras = [];
+
 let cameraIndex = 0;
 
 let scanning = true;
 
 let flashOn = false;
-  let totalScan =
-  Number(localStorage.getItem("totalScan") || 0);
-// chống quét trùng
+
+let totalScan =
+  Number(
+    localStorage.getItem("totalScan") || 0
+  );
+
+// chống scan trùng
 let lastCode = "";
+
 let lastScan = 0;
-let overlayShowing = false;
+
 // ================= AUTO LOGIN =================
 if(currentUser){
 
   showApp();
 }
+
+// ================= UPDATE COUNTER =================
 function updateCounter(){
 
   document.getElementById("todayCount")
   .innerHTML =
-  "📦 Hôm nay: " + totalScan;
+    "📦 Hôm nay: " + totalScan;
 }
+
 // ================= LOGIN =================
 function login(){
 
@@ -250,8 +270,10 @@ function login(){
   fetch(
     API
     + "?action=login"
-    + "&username=" + encodeURIComponent(username)
-    + "&password=" + encodeURIComponent(password)
+    + "&username="
+    + encodeURIComponent(username)
+    + "&password="
+    + encodeURIComponent(password)
   )
 
   .then(r=>r.json())
@@ -260,7 +282,10 @@ function login(){
 
     if(res.success){
 
-      localStorage.setItem("user", res.username);
+      localStorage.setItem(
+        "user",
+        res.username
+      );
 
       currentUser = res.username;
 
@@ -269,7 +294,8 @@ function login(){
     }else{
 
       document.getElementById("loginMsg")
-      .innerHTML = "❌ Sai tài khoản";
+      .innerHTML =
+        "❌ Sai tài khoản";
     }
   });
 }
@@ -282,63 +308,14 @@ function showApp(){
   app.style.display = "block";
 
   document.getElementById("userInfo")
-  .innerHTML = "👤 " + currentUser;
+  .innerHTML =
+    "👤 " + currentUser;
+
+  updateCounter();
 
   initCamera();
-  updateCounter();
 }
-// ================= resetCounter =================  
-function resetCounter(){
 
-  // reset số đếm
-  totalScan = 0;
-
-  // reset duplicate
-  lastCode = "";
-
-  // reset local storage
-  localStorage.setItem(
-    "totalScan",
-    "0"
-  );
-
-  // update UI
-  updateCounter();
-
-  // TẮT overlay hiện tại luôn
-  hideOverlay();
-
-  // reset text
-  result.innerHTML =
-    "📷 Sẵn sàng quét";
-
-  // mở scan lại
-  scanning = true;
-
-  // hiệu ứng rung + beep reset
-  if(navigator.vibrate){
-
-    navigator.vibrate(80);
-  }
-
-  successAudio.currentTime = 0;
-
-  successAudio.play().catch(()=>{});
-
-  // thông báo ngắn
-  showOverlay(
-    `
-    🔄 ĐÃ RESET COUNTER
-    `,
-    true
-  );
-
-  setTimeout(()=>{
-
-    hideOverlay();
-
-  },800);
-}
 // ================= LOGOUT =================
 function logout(){
 
@@ -347,22 +324,61 @@ function logout(){
   location.reload();
 }
 
+// ================= RESET COUNTER =================
+function resetCounter(){
+
+  totalScan = 0;
+
+  lastCode = "";
+
+  localStorage.setItem(
+    "totalScan",
+    "0"
+  );
+
+  updateCounter();
+
+  hideOverlay();
+
+  result.innerHTML =
+    "📷 Sẵn sàng quét";
+
+  scanning = true;
+
+  if(navigator.vibrate){
+
+    navigator.vibrate(80);
+  }
+
+  successAudio.pause();
+
+  successAudio.currentTime = 0;
+
+  successAudio.play().catch(()=>{});
+}
+
 // ================= INIT CAMERA =================
 function initCamera(){
 
-  Html5Qrcode.getCameras().then(devs => {
+  Html5Qrcode.getCameras()
+
+  .then(devs => {
 
     cameras = devs;
 
     let back = devs.find(d =>
-      /back|rear|environment/i.test(d.label)
+      /back|rear|environment/i
+      .test(d.label)
     );
 
-    cameraIndex = back
+    cameraIndex =
+      back
       ? devs.indexOf(back)
       : devs.length - 1;
 
-    startCamera(cameras[cameraIndex].id);
+    startCamera(
+      cameras[cameraIndex].id
+    );
   });
 }
 
@@ -381,38 +397,39 @@ async function startCamera(id){
     await qr.start(
       id,
       {
-    
-        fps: 20,
-    
-        aspectRatio: 1.777778,
-    
-        qrbox: {
-          width: 320,
-          height: 180
+
+        fps:20,
+
+        aspectRatio:1.777778,
+
+        qrbox:{
+          width:320,
+          height:180
         },
-    
-        videoConstraints: {
-          facingMode: "environment",
-          width: 1280,
-          height: 720
+
+        videoConstraints:{
+          facingMode:"environment",
+          width:1280,
+          height:720
         },
-    
-        formatsToSupport: [
-    
-          // QR
+
+        formatsToSupport:[
+
           Html5QrcodeSupportedFormats.QR_CODE,
-    
-          // BARCODE
+
           Html5QrcodeSupportedFormats.CODE_128,
+
           Html5QrcodeSupportedFormats.EAN_13,
+
           Html5QrcodeSupportedFormats.EAN_8,
+
           Html5QrcodeSupportedFormats.UPC_A,
+
           Html5QrcodeSupportedFormats.UPC_E,
-    
-          // thêm nếu cần
+
           Html5QrcodeSupportedFormats.CODE_39
         ]
-    
+
       },
       onScan
     );
@@ -421,39 +438,129 @@ async function startCamera(id){
 
     console.log(e);
 
-    result.innerHTML = "❌ Camera lỗi";
+    result.innerHTML =
+      "❌ Camera lỗi";
   }
 }
+
+// ================= DUPLICATE =================
 function isDuplicate(code){
 
   const now = Date.now();
 
-  if(code === lastCode && now - lastScan < 800){
+  if(
+    code === lastCode
+    &&
+    now - lastScan < 800
+  ){
 
     return true;
   }
 
   lastCode = code;
+
   lastScan = now;
 
   return false;
 }
+
+// ================= OVERLAY =================
+function showOverlay(html, ok=true){
+
+  overlay.style.display = "flex";
+
+  overlay.className =
+    ok
+    ? "overlay-success"
+    : "overlay-error";
+
+  overlayContent.innerHTML = html;
+}
+
+function hideOverlay(){
+
+  overlay.style.display = "none";
+
+  overlayContent.innerHTML = "";
+}
+
+// ================= SUCCESS =================
+function successEffect(){
+
+  totalScan++;
+
+  localStorage.setItem(
+    "totalScan",
+    totalScan
+  );
+
+  updateCounter();
+
+  if(navigator.vibrate){
+
+    navigator.vibrate([120,50,120]);
+  }
+
+  successAudio.pause();
+
+  successAudio.currentTime = 0;
+
+  successAudio.play().catch(()=>{});
+
+  document.body.style.background =
+    "#063";
+
+  setTimeout(()=>{
+
+    document.body.style.background =
+      "#111";
+
+  },150);
+}
+
+// ================= ERROR =================
+function errorEffect(){
+
+  if(navigator.vibrate){
+
+    navigator.vibrate([100,80,100]);
+  }
+
+  errorAudio.pause();
+
+  errorAudio.currentTime = 0;
+
+  errorAudio.play().catch(()=>{});
+
+  document.body.style.background =
+    "#500";
+
+  setTimeout(()=>{
+
+    document.body.style.background =
+      "#111";
+
+  },200);
+}
+
 // ================= SCAN =================
 function onScan(text){
- 
+
   if(!scanning) return;
 
-  // chống quét trùng
   if(isDuplicate(text)) return;
-  // khóa scan tạm thời
+
   scanning = false;
 
-  result.innerHTML = "⏳ Đang xử lý...";
+  result.innerHTML =
+    "⏳ Đang xử lý...";
 
   fetch(
     API
-    + "?mtn=" + encodeURIComponent(text)
-    + "&user=" + encodeURIComponent(currentUser)
+    + "?mtn="
+    + encodeURIComponent(text)
+    + "&user="
+    + encodeURIComponent(currentUser)
   )
 
   .then(r=>r.json())
@@ -461,81 +568,63 @@ function onScan(text){
   .then(res=>{
 
     if(res.success){
-       successEffect();
-      result.innerHTML =
+
+      successEffect();
+
+      showOverlay(
         `
-        <div class="ok">
-        
-        ✅ Thành công
-        
+        ✅ ĐÃ QUÉT THÀNH CÔNG
+
         <br><br>
-        
+
         📦 ${res.product}
-        
+
         <br>
-        
+
         🔢 ${res.barcode}
-        
+
         <br>
-        
+
         📊 SL: ${res.qty}
-        
-        </div>
-        `;
-
-     showOverlay(
-  `
-  ✅ ĐÃ QUÉT THÀNH CÔNG
-
-  <br><br>
-
-  📦 ${res.product}
-
-  <br>
-
-  📊 SL: ${res.qty}
-  `,
-  true
-);
+        `,
+        true
+      );
 
     }else{
+
       errorEffect();
-      result.innerHTML =
-      `
-      <div class="err">
-      
-      ❌ ${res.message}
-      
-      </div>
-      `;
+
       showOverlay(
-  `
-  ❌ ${res.message}
-  `,
-  false
-);
+        `
+        ❌ ${res.message}
+        `,
+        false
+      );
     }
 
-    resetScan();
-  });
-}
+    // quay lại scan sau 3s
+    setTimeout(()=>{
 
-// ================= RESET =================
-function resetScan(){
+      hideOverlay();
 
-  setTimeout(()=>{
+      result.innerHTML =
+        "📷 Sẵn sàng quét";
 
-    // ẩn overlay
-    hideOverlay();
+      scanning = true;
 
-    // mở scan lại
-    scanning = true;
+    },3000);
 
-    // reset text
+  })
+
+  .catch(err=>{
+
+    console.log(err);
+
     result.innerHTML =
-      "📷 Sẵn sàng quét";
+      "❌ Lỗi kết nối";
 
-  },3000);
+    scanning = true;
+  });
 }
 
 // ================= SWITCH CAMERA =================
@@ -549,9 +638,12 @@ function switchCamera(){
   }
 
   cameraIndex =
-    (cameraIndex + 1) % cameras.length;
+    (cameraIndex + 1)
+    % cameras.length;
 
-  startCamera(cameras[cameraIndex].id);
+  startCamera(
+    cameras[cameraIndex].id
+  );
 }
 
 // ================= FLASH =================
@@ -582,8 +674,8 @@ async function toggleFlash(){
     flashOn = !flashOn;
 
     await track.applyConstraints({
-      advanced: [
-        { torch: flashOn }
+      advanced:[
+        { torch:flashOn }
       ]
     });
 
@@ -600,100 +692,6 @@ async function toggleFlash(){
   }
 }
 
-function showOverlay(html, ok=true){
-
-  overlayShowing = true;
-
-  overlay.style.display = "flex";
-
-  overlay.className =
-    ok
-    ? "overlay-success"
-    : "overlay-error";
-
-  overlayContent.innerHTML = html;
-}
-
-function hideOverlay(){
-
-  overlay.style.display = "none";
-
-  overlayContent.innerHTML = "";
-
-  overlayShowing = false;
-
-  // QUAN TRỌNG
-  scanning = true;
-}
-// ================= SUCCESS =================
-function successEffect(){
-
-  totalScan++;
-
-  localStorage.setItem(
-    "totalScan",
-    totalScan
-  );
-
-  updateCounter();
-
-  // rung
-  if(navigator.vibrate){
-
-    navigator.vibrate([120,50,120]);
-  }
-
-  // beep
-  successAudio.pause();
-
-  successAudio.currentTime = 0;
-
-  successAudio.play().catch(err=>{
-
-    console.log(err);
-  });
-
-  // flash xanh
-  document.body.style.background =
-    "#063";
-
-  setTimeout(()=>{
-
-    document.body.style.background =
-      "#111";
-
-  },150);
-}
-
-// ================= ERROR =================
-function errorEffect(){
-
-  if(navigator.vibrate){
-
-    navigator.vibrate([100,80,100]);
-  }
-
-  errorAudio.pause();
-
-  errorAudio.currentTime = 0;
-
-  errorAudio.play().catch(err=>{
-
-    console.log(err);
-  });
-
-  document.body.style.background =
-    "#500";
-
-  setTimeout(()=>{
-
-    document.body.style.background =
-      "#111";
-
-  },200);
-}
-  
 </script>
-
 </body>
 </html>
