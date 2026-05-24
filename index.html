@@ -99,7 +99,51 @@ button{
   border-radius:14px;
   margin-top:10px;
 }
+#scanPopup{
 
+  position:fixed;
+
+  top:50%;
+  left:50%;
+
+  transform:translate(-50%,-50%);
+
+  background:#111;
+
+  border:3px solid #00ff99;
+
+  padding:30px;
+
+  border-radius:20px;
+
+  font-size:28px;
+
+  font-weight:bold;
+
+  z-index:9999;
+
+  display:none;
+
+  width:85%;
+
+  box-sizing:border-box;
+
+  box-shadow:0 0 30px #000;
+}
+
+.popup-error{
+
+  border-color:#ff4444;
+
+  color:#ff4444;
+}
+
+.popup-success{
+
+  border-color:#00ff99;
+
+  color:#00ff99;
+}
 </style>
 
 </head>
@@ -153,7 +197,7 @@ button{
 </div>
 
 <div id="result">Sẵn sàng quét</div>
-
+<div id="scanPopup"></div>
 </div>
 
 <script>
@@ -165,6 +209,8 @@ let currentUser = localStorage.getItem("user");
 const loginBox = document.getElementById("loginBox");
 const app = document.getElementById("app");
 const result = document.getElementById("result");
+  const popup =
+  document.getElementById("scanPopup");
 const successAudio = new Audio(
   "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
 );
@@ -387,46 +433,64 @@ function onScan(text){
 
     if(res.success){
 
-      successEffect();
+  successEffect();
 
-      result.innerHTML =
-      `
-      <div class="ok">
+  result.innerHTML =
+  `
+  <div class="ok">
 
-      ✅ Thành công
+  ✅ Thành công
 
-      <br><br>
+  <br><br>
 
-      📦 ${res.product}
+  📦 ${res.product}
 
-      <br>
+  <br>
 
-      🔢 ${res.barcode}
+  📊 SL: ${res.qty}
 
-      <br>
+  </div>
+  `;
 
-      📊 SL: ${res.qty}
+  showPopup(
+    `
+    ✅ QUÉT THÀNH CÔNG
 
-      </div>
-      `;
+    <br><br>
 
-    }else{
+    📦 ${res.product}
 
-      errorEffect();
+    <br>
 
-      result.innerHTML =
-      `
-      <div class="err">
+    📊 SL: ${res.qty}
+    `,
+    true
+  );
 
-      ❌ ${res.message}
+}else{
 
-      </div>
-      `;
-    }
+  errorEffect();
+
+  result.innerHTML =
+  `
+  <div class="err">
+
+  ❌ ${res.message}
+
+  </div>
+  `;
+
+  showPopup(
+    `
+    ❌ ${res.message}
+    `,
+    false
+  );
+}
 
     // scan lại sau 3 giây
     setTimeout(()=>{
-
+      hidePopup();
       scanning = true;
 
       result.innerHTML =
@@ -508,7 +572,22 @@ async function toggleFlash(){
     alert("Flash không hỗ trợ");
   }
 }
+function showPopup(html, ok=true){
 
+  popup.style.display = "block";
+
+  popup.className =
+    ok
+    ? "popup-success"
+    : "popup-error";
+
+  popup.innerHTML = html;
+}
+
+function hidePopup(){
+
+  popup.style.display = "none";
+}
 
 // ================= SUCCESS =================
 function successEffect(){
