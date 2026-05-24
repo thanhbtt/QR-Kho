@@ -50,6 +50,7 @@ button{
 
 #app{
   display:none;
+  animation:pop 0.2s ease;
 }
 
 #result{
@@ -123,7 +124,7 @@ button{
   z-index:9999;
 
   display:none;
-
+  animation:pop 0.2s ease;
   width:85%;
 
   box-sizing:border-box;
@@ -143,6 +144,18 @@ button{
   border-color:#00ff99;
 
   color:#00ff99;
+}
+  @keyframes pop{
+
+  from{
+    transform:translate(-50%,-50%) scale(0.7);
+    opacity:0;
+  }
+
+  to{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:1;
+  }
 }
 </style>
 
@@ -266,9 +279,18 @@ function login(){
   .then(r=>r.json())
 
   .then(res=>{
-
+    
     if(res.success){
-
+      // unlock audio mobile
+      successAudio.play().then(()=>{
+        successAudio.pause();
+        successAudio.currentTime = 0;
+      }).catch(()=>{});
+      
+      errorAudio.play().then(()=>{
+        errorAudio.pause();
+        errorAudio.currentTime = 0;
+      }).catch(()=>{});
       localStorage.setItem("user", res.username);
 
       currentUser = res.username;
@@ -581,6 +603,9 @@ function showPopup(html, ok=true){
     ? "popup-success"
     : "popup-error";
 
+  // GIỮ id scanPopup
+  popup.id = "scanPopup";
+
   popup.innerHTML = html;
 }
 
@@ -603,13 +628,29 @@ function successEffect(){
 
   // rung
   if(navigator.vibrate){
-    navigator.vibrate([120,50,120]);
+    if("vibrate" in navigator){
+
+  navigator.vibrate([200,80,200]);
+}
   }
 
   // âm thanh
   successAudio.currentTime = 0;
 
-  successAudio.play().catch(()=>{});
+ successAudio.pause();
+
+successAudio.currentTime = 0;
+
+const playPromise =
+  successAudio.play();
+
+if(playPromise !== undefined){
+
+  playPromise.catch(err=>{
+
+    console.log(err);
+  });
+}
 
   // flash xanh
   document.body.style.background = "#063";
@@ -630,7 +671,20 @@ function errorEffect(){
 
   errorAudio.currentTime = 0;
 
-  errorAudio.play().catch(()=>{});
+  errorAudio.pause();
+
+errorAudio.currentTime = 0;
+
+const playPromise =
+  errorAudio.play();
+
+if(playPromise !== undefined){
+
+  playPromise.catch(err=>{
+
+    console.log(err);
+  });
+}
 
   document.body.style.background = "#500";
 
