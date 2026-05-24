@@ -107,6 +107,9 @@ let cameraIndex = 0;
 let scanning = true;
 
 let flashOn = false;
+// chống quét trùng
+let lastCode = "";
+let lastScan = 0;
 
 // ================= AUTO LOGIN =================
 if(currentUser){
@@ -248,11 +251,27 @@ async function startCamera(id){
     result.innerHTML = "❌ Camera lỗi";
   }
 }
+function isDuplicate(code){
 
+  const now = Date.now();
+
+  if(code === lastCode && now - lastScan < 800){
+
+    return true;
+  }
+
+  lastCode = code;
+  lastScan = now;
+
+  return false;
+}
 // ================= SCAN =================
 function onScan(text){
 
   if(!scanning) return;
+
+  // chống quét trùng
+  if(isDuplicate(text)) return;
 
   scanning = false;
 
