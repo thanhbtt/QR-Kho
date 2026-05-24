@@ -383,9 +383,7 @@ function onScan(text){
         </div>
         `;
 
-      beep();
-
-      vibrate();
+     
 
     }else{
       errorEffect();
@@ -515,44 +513,7 @@ function errorEffect(){
 
   },200);
 }
-  // ================= SUCCESS EFFECT =================
-function successEffect(){
-
-  // rung
-  if(navigator.vibrate){
-    navigator.vibrate(120);
-  }
-
-  // beep
-  new Audio(
-    "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
-  ).play();
-
-  // flash xanh
-  document.body.style.background = "#0f3";
-
-  setTimeout(()=>{
-    document.body.style.background = "#111";
-  },150);
-}
-
-// ================= ERROR EFFECT =================
-function errorEffect(){
-
-  if(navigator.vibrate){
-    navigator.vibrate([100,80,100]);
-  }
-
-  new Audio(
-    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-  ).play();
-
-  document.body.style.background = "#a00";
-
-  setTimeout(()=>{
-    document.body.style.background = "#111";
-  },200);
-}
+  
 </script>
 
 </body>
